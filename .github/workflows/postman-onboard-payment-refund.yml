@@ -1,0 +1,93 @@
+# .github/workflows/postman-onboard-payment-refund.yml
+#
+# Postman Onboarding Workflow — Payment Refund Service
+# =====================================================
+# ─── REQUIRED SECRETS --------------------------------────────────────────────
+#   POSTMAN_API_KEY        — Postman API key (PMAK-...)
+#   POSTMAN_ACCESS_TOKEN   — Session token (expires; governance skipped if missing)
+#   GH_FALLBACK_TOKEN      — GitHub PAT with repo + workflow scopes
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Postman Onboarding — Payment Refund Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'specs/payment-refund-api-openapi.yaml'
+      - '.github/workflows/postman-onboard-payment-refund.yml'
+
+  workflow_dispatch:
+    inputs:
+      force_recreate:
+        description: 'Force recreation of workspace/collections (ignores saved IDs)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  onboard-payment-refund:
+    name: Onboard Payment Refund API to Postman
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Onboard Payment Refund API
+        uses: postman-cs/postman-api-onboarding-action@v0
+        with:
+          # ── Service identity ──────────────────────────────────────────────
+          project-name: payment-refund-service
+          domain: payments
+          domain-code: PAY
+
+          # ── Existing resource IDs (populated after first run) ─────────────
+          workspace-id: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_WORKSPACE_ID || '' }}
+          spec-id: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_SPEC_UID || '' }}
+          baseline-collection-id: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_BASELINE_COLLECTION_UID || '' }}
+          smoke-collection-id: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_SMOKE_COLLECTION_UID || '' }}
+          contract-collection-id: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_CONTRACT_COLLECTION_UID || '' }}
+          environment-uids-json: ${{ inputs.force_recreate != 'true' && vars.POSTMAN_ENV_UIDS_JSON || '{}' }}
+
+          # ── Ownership ─────────────────────────────────────────────────────
+          requester-email: andrew.sd.tsai@gmail.com
+          workspace-admin-user-ids: "53049599"
+
+          # ── Spec location ─────────────────────────────────────────────────
+          spec-url: https://raw.githubusercontent.com/tsailifehighlights/payment-refund-service/main/specs/payment-refund-api-openapi.yaml
+
+          # ── Environments ──────────────────────────────────────────────────
+          # CHANGED: added qa and dev to match all 4 servers in the spec
+          environments-json: '["prod","uat","qa","dev"]'
+
+          # CHANGED: added qa and dev URLs from spec servers block
+          env-runtime-urls-json: >-
+            {
+              "prod": "https://api.payments.example.com/v2",
+              "uat":  "https://api-uat.payments.example.com/v2",
+              "qa":   "https://api-qa.payments.example.com/v2",
+              "dev":  "https://api-dev.payments.example.com/v2"
+            }
+
+          # CHANGED: added qa and dev keys — must always match environments-json
+          system-env-map-json: >-
+            {
+              "prod": "",
+              "uat":  "",
+              "qa":   "",
+              "dev":  ""
+            }
+
+          governance-mapping-json: '{"payments":"Payments Platform"}'
+
+          # ── Authentication ────────────────────────────────────────────────
+          postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
+          postman-access-token: ${{ secrets.POSTMAN_ACCESS_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-fallback-token: ${{ secrets.GH_FALLBACK_TOKEN }}
