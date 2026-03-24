@@ -60,7 +60,7 @@ jobs:
           workspace-admin-user-ids: "53049599"
 
           # ── Spec location ─────────────────────────────────────────────────
-          spec-url: https://raw.githubusercontent.com/tsailifehighlights/payment-refund-service/main/specs/payment-refund-api-openapi.yaml
+          spec-url: https://raw.githubusercontent.com/tsailifehighlights/payment-refund-service-test/main/specs/payment-refund-api-openapi.yaml
 
           # ── Environments ──────────────────────────────────────────────────
           # CHANGED: added qa and dev to match all 4 servers in the spec
